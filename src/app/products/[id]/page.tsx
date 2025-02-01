@@ -180,7 +180,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               variant_name: variant.variant_name,
               size: variant.size,
               color: variant.color,
-              price: parseFloat(variant.price),
+              price: variant.price,
               stock_status: variant.stock_status
             })
             .eq('id', variant.id)
@@ -224,7 +224,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               variant_name: variant.variant_name,
               size: variant.size,
               color: variant.color,
-              price: parseFloat(variant.price),
+              price: variant.price,
               stock_status: variant.stock_status
             })
             .select()
@@ -509,7 +509,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       variant_name: '',
                       size: '',
                       color: '',
-                      price: '0',
+                      price: 0,
                       stock_status: 'in_stock',
                       images: []
                     }

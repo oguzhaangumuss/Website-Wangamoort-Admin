@@ -43,7 +43,7 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
       ...variants,
       {
         variant_name: '',
-        size: '',
+        size: 'Standart',
         color: '',
         price: 0,
         stock_status: 'in_stock',
@@ -171,7 +171,7 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
                 type="number"
                 step="0.01"
                 min="0"
-                value={0}
+                value={variant.price}
                 onChange={(e) => {
                   const value = e.target.value
                   updateVariant(index, { 
