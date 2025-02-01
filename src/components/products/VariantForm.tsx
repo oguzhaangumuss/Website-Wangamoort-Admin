@@ -20,7 +20,7 @@ export interface VariantFormData {
   variant_name: string | null
   size: string
   color: string
-  price: string
+  price: number
   stock_status: 'in_stock' | 'out_of_stock' | 'pre_order'
   images?: ProductImage[]
 }
@@ -33,7 +33,7 @@ interface VariantFormProps {
 
 interface VariantField {
   name: keyof VariantFormData;
-  value: string | number;
+  value: string | number | null;
 }
 
 export default function VariantForm({ variants = [], onChange, onDelete }: VariantFormProps) {
@@ -45,7 +45,7 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
         variant_name: '',
         size: '',
         color: '',
-        price: '',
+        price: 0,
         stock_status: 'in_stock',
         images: []
       }
@@ -54,10 +54,20 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
 
   const updateVariant = (index: number, field: VariantField): void => {
     const updatedVariants = [...variants]
-    updatedVariants[index] = { 
-      ...updatedVariants[index], 
-      [field.name]: field.value 
+    
+    if (field.name === 'price') {
+      const priceValue = field.value === '' || field.value === null ? 0 : Number(field.value)
+      updatedVariants[index] = {
+        ...updatedVariants[index],
+        price: priceValue
+      }
+    } else {
+      updatedVariants[index] = { 
+        ...updatedVariants[index], 
+        [field.name]: field.value 
+      }
     }
+    
     onChange(updatedVariants)
   }
 
@@ -157,10 +167,18 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
                 Price
               </label>
               <input
+                placeholder="0"
                 type="number"
                 step="0.01"
-                value={variant.price}
-                onChange={(e) => updateVariant(index, { name: 'price', value: e.target.value })}
+                min="0"
+                value={0}
+                onChange={(e) => {
+                  const value = e.target.value
+                  updateVariant(index, { 
+                    name: 'price', 
+                    value: value === '' ? 0 : Number(value)
+                  })
+                }}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
               />
             </div>

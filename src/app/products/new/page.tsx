@@ -101,7 +101,7 @@ export default function NewProductPage() {
 
       if (productError) throw productError
 
-      // Varyantları ekle
+      // Varyant kontrolü
       if (variants.length > 0) {
         for (const variant of variants) {
           // Önce varyantı ekle
@@ -109,11 +109,11 @@ export default function NewProductPage() {
             .from('product_variants')
             .insert([{
               product_id: productData[0].id,
-              variant_name: variant.variant_name,
-              size: variant.size,
-              color: variant.color,
-              price: parseFloat(variant.price),
-              stock_status: variant.stock_status
+              variant_name: variant.variant_name || '',
+              size: variant.size || '',
+              color: variant.color || '',
+              price: variant.price ?? 0,
+              stock_status: variant.stock_status || 'in_stock'
             }])
             .select()
 
@@ -135,6 +135,21 @@ export default function NewProductPage() {
             if (imageError) throw imageError
           }
         }
+      } else {
+        // Varsayılan varyant oluştur
+        const { error: defaultVariantError } = await supabase
+          .from('product_variants')
+          .insert([{
+            product_id: productData[0].id,
+            variant_name: '',
+            size: '',
+            color: '',
+            price: 0,
+            stock_status: 'in_stock'
+          }])
+          .select()
+
+        if (defaultVariantError) throw defaultVariantError
       }
 
       // Başarı bildirimi
