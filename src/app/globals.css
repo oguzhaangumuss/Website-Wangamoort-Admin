@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #ffd230;
+  --secondary-color: #152e1b;
+  --background-light: #F9F9F9;
+  --text-dark: #152e1b;
+  --text-light: #F9F9F9;
+}
+
+body {
+  background-color: var(--background-light);
+  color: var(--text-dark);
+}
+
+/* Eğer dark mode varsa onu devre dışı bırakalım */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-light: #F9F9F9;
+    --text-dark: #152e1b;
+  }
+}
