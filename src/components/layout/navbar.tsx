@@ -41,12 +41,14 @@ export default function Navbar() {
                 <div className="flex flex-shrink-0 items-center">
                   <Link href="/">
                     <Image
-                      width={80}
-                      height={80}
-                      className="h-14 w-auto"
-                      src="/logo.png"
+                      width={130}
+                      height={40}
+                      src="/logo4.png"
                       alt="Wangamoort"
-                    />
+                      className="h-14 w-auto"
+                      priority  // Öncelikli yükleme için
+                      unoptimized
+                    /> 
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
