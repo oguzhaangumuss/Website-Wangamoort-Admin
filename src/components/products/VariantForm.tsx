@@ -43,7 +43,7 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
       ...variants,
       {
         variant_name: '',
-        size: 'Standart',
+        size: '',
         color: '',
         price: 0,
         stock_status: 'in_stock',

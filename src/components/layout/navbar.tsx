@@ -76,7 +76,7 @@ export default function Navbar() {
                     <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--secondary-color)] focus:ring-offset-2">
                       <span className="sr-only">Open user menu</span>
                       <div className="h-8 w-8 rounded-full bg-[var(--secondary-color)] flex items-center justify-center text-white">
-                        A
+                        Wangamoort
                       </div>
                     </Menu.Button>
                   </div>
