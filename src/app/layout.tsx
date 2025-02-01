@@ -21,7 +21,22 @@ export default function RootLayout({
       <body className={inter.className}>
         <Navbar />
         <main>{children}</main>
-        <Toaster position="top-right" />
+        <Toaster 
+          position="top-right" 
+          expand={false} 
+          richColors 
+          closeButton
+          style={{
+            zIndex: 9999,
+          }}
+          toastOptions={{
+            style: {
+              background: 'white',
+              color: 'black',
+            },
+            className: 'my-toast-class',
+          }}
+        />
       </body>
     </html>
   );
