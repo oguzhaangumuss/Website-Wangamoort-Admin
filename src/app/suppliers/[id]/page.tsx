@@ -1,21 +1,11 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Supplier } from '@/types/database.types'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-
-// Form için özel tip tanımı
-type SupplierFormData = Omit<Supplier, 'address'> & {
-  address: {
-    street: string
-    city: string
-    state: string
-    postcode: string
-  }
-}
 
 export default function SupplierForm({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -43,13 +33,7 @@ export default function SupplierForm({ params }: { params: Promise<{ id: string 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!isNew) {
-      fetchSupplier()
-    }
-  }, [id])
-
-  const fetchSupplier = async () => {
+  const fetchSupplier = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('suppliers')
@@ -66,7 +50,13 @@ export default function SupplierForm({ params }: { params: Promise<{ id: string 
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    if (!isNew) {
+      fetchSupplier()
+    }
+  }, [id, isNew, fetchSupplier])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,9 +80,9 @@ export default function SupplierForm({ params }: { params: Promise<{ id: string 
       }
 
       router.push('/suppliers')
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error('Error saving supplier:', error)
-      setError(error.message)
+      setError(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setSaving(false)
     }

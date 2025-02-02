@@ -1,6 +1,5 @@
 import { Dialog } from '@headlessui/react'
 import { Quote } from '../../types/database.types'
-import * as XLSX from 'xlsx'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { exportQuoteToExcel } from '../../services/excelExport'
 
