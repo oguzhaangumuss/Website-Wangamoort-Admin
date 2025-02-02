@@ -28,7 +28,7 @@ export default function LoginPage() {
       router.push('/')
       router.refresh()
       toast.success('Welcome back!')
-    } catch (error) {
+    } catch {
       toast.error('Invalid login credentials')
     } finally {
       setLoading(false)
