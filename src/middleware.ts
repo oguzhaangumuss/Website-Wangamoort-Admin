@@ -26,7 +26,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     }
 
     return res
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Auth error:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.redirect(new URL('/login', req.url))
   }
