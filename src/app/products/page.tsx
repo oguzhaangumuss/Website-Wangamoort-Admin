@@ -36,6 +36,10 @@ export default function ProductsPage() {
               name
             )
           ),
+          default_supplier:suppliers (
+            id,
+            supplier_code
+          ),
           variants:product_variants!product_id (
             id,
             variant_name,

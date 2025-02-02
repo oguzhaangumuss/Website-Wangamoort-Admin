@@ -66,6 +66,8 @@ export interface Database {
           description: string | null
           subcategory_id: string
           created_at: string
+          default_supplier_id: string | null
+          is_recommended: boolean
           subcategory?: Database['public']['Tables']['subcategories']['Row']
           variants?: Database['public']['Tables']['product_variants']['Row'][]
         }
@@ -76,6 +78,8 @@ export interface Database {
           description?: string | null
           subcategory_id: string
           created_at?: string
+          default_supplier_id?: string
+          is_recommended?: boolean
         }
         Update: {
           id?: string
@@ -84,6 +88,8 @@ export interface Database {
           description?: string | null
           subcategory_id?: string
           created_at?: string
+          default_supplier_id?: string
+          is_recommended?: boolean
         }
         Relationships: {
           subcategory: {
@@ -92,10 +98,10 @@ export interface Database {
               Columns: ['subcategory_id']
             }
           }
-          variants: {
+          product_variants: {
             References: {
               Table: 'product_variants'
-              Columns: ['id']
+              Columns: ['product_id']
             }
           }
         }
@@ -284,6 +290,59 @@ export interface Database {
           status: 'active' | 'inactive'
           product_categories?: string[]
           notes?: string
+          supplier_code: string
+          website_url?: string
+        }
+      }
+      supplier_products: {
+        Row: {
+          id: string
+          supplier_id: string
+          product_id: string
+          supplier_product_url?: string
+          supplier_product_code?: string
+          supplier_price: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+          last_checked: string
+          notes?: string
+        }
+        Insert: {
+          id?: string
+          supplier_id: string
+          product_id: string
+          supplier_product_url?: string
+          supplier_product_code?: string
+          supplier_price: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          last_checked?: string
+          notes?: string
+        }
+        Update: {
+          supplier_product_url?: string
+          supplier_product_code?: string
+          supplier_price?: number
+          is_active?: boolean
+          updated_at?: string
+          last_checked?: string
+          notes?: string
+        }
+        Relationships: {
+          supplier: {
+            References: {
+              Table: 'suppliers'
+              Columns: ['supplier_id']
+            }
+          }
+          product: {
+            References: {
+              Table: 'products'
+              Columns: ['product_id']
+            }
+          }
         }
       }
     }
@@ -301,11 +360,13 @@ export type ExtendedProduct = Omit<Database['public']['Tables']['products']['Row
   stock_status: string
   updated_at: string
   description: string
+  default_supplier?: Supplier
+  is_recommended: boolean
 }
 
 export type Product = Database['public']['Tables']['products']['Row'] & {
   subcategory?: Subcategory
-  variants?: ProductVariant[]
+  product_variants?: ProductVariant[]
 }
 
 export type ProductVariant = Database['public']['Tables']['product_variants']['Row']
@@ -341,4 +402,10 @@ export interface ApiResponse<T> {
   success: boolean
   data?: T
   error?: string
+}
+
+export type Supplier = Database['public']['Tables']['suppliers']['Row']
+export type SupplierProduct = Database['public']['Tables']['supplier_products']['Row'] & {
+  product?: Product
+  supplier?: Supplier
 }

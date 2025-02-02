@@ -19,6 +19,10 @@ interface ExtendedProduct extends Product {
   variants?: (ProductVariant & {
     images?: ProductImage[]
   })[]
+  default_supplier?: {
+    company_name: string
+    supplier_code: string
+  }
 }
 
 interface ProductTableProps {
@@ -252,7 +256,7 @@ export default function ProductTable({ initialProducts }: ProductTableProps) {
                   <Fragment key={product.id}>
                     <tr className="bg-white">
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
-                        Ozi
+                        {product.default_supplier?.supplier_code || '-'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {product.subcategory?.category?.name || 'Uncategorized'}

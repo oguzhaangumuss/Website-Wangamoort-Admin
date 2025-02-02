@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PencilIcon, PlusIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
-import type { Category, Subcategory, ProductImage } from '@/types/database.types'
+import type { Category, Subcategory, ProductImage, Supplier } from '@/types/database.types'
 import VariantForm, { VariantFormData } from '../../../components/products/VariantForm'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -38,9 +38,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const [product, setProduct] = useState({
     name: '',
     subcategory_id: '',
-    description: ''
+    description: '',
+    default_supplier_id: '',
+    is_recommended: false
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -58,7 +61,9 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         setProduct({
           name: productData.name,
           subcategory_id: productData.subcategory_id,
-          description: productData.description || ''
+          description: productData.description || '',
+          default_supplier_id: productData.default_supplier_id || '',
+          is_recommended: productData.is_recommended || false
         })
 
         // Variant'ları çek
@@ -149,6 +154,20 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     sub => sub.category_id === selectedCategoryId
   )
 
+  useEffect(() => {
+    // Supplier listesini yükle
+    const fetchSuppliers = async () => {
+      const { data } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('status', 'active')
+      
+      setSuppliers(data || [])
+    }
+
+    fetchSuppliers()
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -164,11 +183,45 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           name: product.name,
           slug: createSlug(product.name),
           description: product.description,
-          subcategory_id: product.subcategory_id
+          subcategory_id: product.subcategory_id,
+          default_supplier_id: product.default_supplier_id,
+          is_recommended: product.is_recommended
         })
         .eq('id', id)
 
       if (productError) throw productError
+
+      // Eğer default_supplier_id değiştiyse ve bir değer seçildiyse
+      if (product.default_supplier_id) {
+        // Önce bu supplier için kayıt var mı kontrol et
+        const { data: existingSupplierProduct, error: checkError } = await supabase
+          .from('supplier_products')
+          .select('id')
+          .eq('supplier_id', product.default_supplier_id)
+          .eq('product_id', id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116: Kayıt bulunamadı hatası
+          throw checkError
+        }
+
+        // Eğer kayıt yoksa yeni kayıt oluştur
+        if (!existingSupplierProduct) {
+          const { error: supplierProductError } = await supabase
+            .from('supplier_products')
+            .insert({
+              supplier_id: product.default_supplier_id,
+              product_id: id,
+              supplier_price: 0, // Varsayılan değer
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              last_checked: new Date().toISOString()
+            })
+
+          if (supplierProductError) throw supplierProductError
+        }
+      }
 
       // Varyantları güncelle
       for (const variant of variants) {
@@ -267,19 +320,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     try {
       const variantToDelete = variants[indexToDelete]
       
-      // Eğer variant veritabanında kayıtlıysa (id varsa)
       if (variantToDelete.id) {
-        // Önce variant'a ait resimleri sil
-        if (variantToDelete.images && variantToDelete.images.length > 0) {
-          const { error: imagesError } = await supabase
-            .from('product_images')
-            .delete()
-            .eq('variant_id', variantToDelete.id)
-
-          if (imagesError) throw imagesError
-        }
-
-        // Sonra variant'ı sil
         const { error: variantError } = await supabase
           .from('product_variants')
           .delete()
@@ -288,15 +329,17 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         if (variantError) throw variantError
       }
 
-      // UI'dan variant'ı kaldır
-      if (selectedVariantIndex === indexToDelete) {
-        setSelectedVariantIndex(null)
-      }
-      
-      const newVariants = variants.filter((_, index) => index !== indexToDelete)
-      setVariants(newVariants)
-
-      toast.success('Variant deleted successfully')
+      // Tüm state güncellemelerini bir Promise.resolve().then() içinde yapalım
+      Promise.resolve().then(() => {
+        const newVariants = variants.filter((_, index) => index !== indexToDelete)
+        setVariants(newVariants)
+        
+        if (selectedVariantIndex === indexToDelete) {
+          setSelectedVariantIndex(null)
+        }
+        
+        toast.success('Variant deleted successfully')
+      })
     } catch (error) {
       console.error('Error deleting variant:', error)
       toast.error('Failed to delete variant')
@@ -422,6 +465,45 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       focus:border-[var(--primary-color)] focus:outline-none focus:ring-[var(--primary-color)]
                       sm:text-sm"
                   />
+                </div>
+
+                {/* Recommended Checkbox */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_recommended"
+                    name="is_recommended"
+                    checked={product.is_recommended}
+                    onChange={(e) => setProduct({ ...product, is_recommended: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 text-[var(--primary-color)] 
+                      focus:ring-[var(--primary-color)]"
+                  />
+                  <label htmlFor="is_recommended" className="ml-2 block text-sm text-gray-700">
+                    Recommend this product
+                  </label>
+                </div>
+
+                {/* Supplier seçimi */}
+                <div>
+                  <label htmlFor="default_supplier_id" className="block text-sm font-medium text-gray-700">
+                    Default Supplier
+                  </label>
+                  <select
+                    id="default_supplier_id"
+                    name="default_supplier_id"
+                    value={product.default_supplier_id || ''}
+                    onChange={(e) => setProduct({ ...product, default_supplier_id: e.target.value })}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900
+                      focus:border-[var(--primary-color)] focus:outline-none focus:ring-[var(--primary-color)]
+                      sm:text-sm"
+                  >
+                    <option value="">Select a supplier</option>
+                    {suppliers.map(supplier => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.company_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

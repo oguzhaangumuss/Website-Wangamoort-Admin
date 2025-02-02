@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Subcategory, Category } from '@/types/database.types'
+import type { Subcategory, Category, Supplier } from '@/types/database.types'
 import VariantForm, { VariantFormData } from '../../../components/products/VariantForm'
 import { toast } from 'sonner'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
@@ -31,14 +31,17 @@ export default function NewProductPage() {
   const [subcategories, setSubcategories] = useState<SubcategoryWithCategory[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [variants, setVariants] = useState<VariantFormData[]>([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
 
   const [product, setProduct] = useState({
     name: '',
     subcategory_id: '',
-    description: ''
+    description: '',
+    default_supplier_id: '',
+    is_recommended: false
   })
 
-  // Kategorileri ve alt kategorileri yükle
+  // Kategorileri, alt kategorileri ve supplier'ları yükle
   useEffect(() => {
     const loadData = async () => {
       // Kategorileri yükle
@@ -69,6 +72,20 @@ export default function NewProductPage() {
       }
 
       setSubcategories(subcategoryData)
+
+      // Supplier'ları yükle
+      const { data: supplierData, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('status', 'active')
+        .order('company_name')
+
+      if (supplierError) {
+        console.error('Error loading suppliers:', supplierError)
+        return
+      }
+
+      setSuppliers(supplierData)
     }
 
     loadData()
@@ -82,9 +99,7 @@ export default function NewProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
-    // Yükleme bildirimi
-    const loadingToast = toast.loading('Adding product...')
+    const loadingToastId = toast.loading('Adding product...')
 
     try {
       // Slug oluştur
@@ -93,7 +108,7 @@ export default function NewProductPage() {
         slug: createSlug(product.name)
       }
 
-      // Ürünü oluştur
+      // Ürünü oluştur (artık default_supplier_id ile birlikte)
       const { data: productData, error: productError } = await supabase
         .from('products')
         .insert([productWithSlug])
@@ -110,8 +125,8 @@ export default function NewProductPage() {
             .insert([{
               product_id: productData[0].id,
               variant_name: variant.variant_name || '',
-              size: variant.size || '',
-              color: variant.color || '',
+              size: variant.size || 'Standart',
+              color: variant.color || 'Default',
               price: variant.price ?? 0,
               stock_status: variant.stock_status || 'in_stock'
             }])
@@ -152,18 +167,13 @@ export default function NewProductPage() {
         if (defaultVariantError) throw defaultVariantError
       }
 
-      // Başarı bildirimi
-      toast.success('Product added successfully!', {
-        id: loadingToast
-      })
-      
+      toast.dismiss(loadingToastId)
+      toast.success('Product added successfully!')
       router.push(`/products/${productData[0].id}`)
     } catch (error) {
       console.error('Error:', error)
-      // Hata bildirimi
-      toast.error('Error creating product', {
-        id: loadingToast
-      })
+      toast.dismiss(loadingToastId)
+      toast.error('Error creating product')
     } finally {
       setLoading(false)
     }
@@ -209,6 +219,30 @@ export default function NewProductPage() {
                   focus:border-[var(--primary-color)] focus:outline-none focus:ring-[var(--primary-color)]
                   sm:text-sm"
               />
+            </div>
+
+            {/* Supplier Select - Yeni eklenen alan */}
+            <div>
+              <label htmlFor="default_supplier_id" className="block text-sm font-medium text-gray-700">
+                Default Supplier
+              </label>
+              <select
+                id="default_supplier_id"
+                name="default_supplier_id"
+                required
+                value={product.default_supplier_id}
+                onChange={(e) => setProduct({ ...product, default_supplier_id: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900
+                  focus:border-[var(--primary-color)] focus:outline-none focus:ring-[var(--primary-color)]
+                  sm:text-sm"
+              >
+                <option value="">Select a supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.company_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Category Select */}
@@ -280,6 +314,22 @@ export default function NewProductPage() {
                   focus:border-[var(--primary-color)] focus:outline-none focus:ring-[var(--primary-color)]
                   sm:text-sm"
               />
+            </div>
+
+            {/* Recommended Checkbox */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_recommended"
+                name="is_recommended"
+                checked={product.is_recommended}
+                onChange={(e) => setProduct({ ...product, is_recommended: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-[var(--primary-color)] 
+                  focus:ring-[var(--primary-color)]"
+              />
+              <label htmlFor="is_recommended" className="ml-2 block text-sm text-gray-700">
+                Recommend this product
+              </label>
             </div>
           </div>
 

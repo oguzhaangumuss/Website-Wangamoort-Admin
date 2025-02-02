@@ -10,6 +10,7 @@ import { QuoteRow } from '../../components/quotes/QuoteRow'
 import { QuoteDetailModal } from '../../components/quotes/QuoteDetailModal'
 import { Quote } from '@/types/database.types'
 import { useDebounce } from '../../hooks/useDebounce'
+import { supabase } from '@/lib/supabase'
 
 export default function QuotesPage() {
   const { quotes, loading, totalCount, fetchQuotes, updateQuoteStatus } = useQuotes()
@@ -23,6 +24,16 @@ export default function QuotesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [totalStatusCounts, setTotalStatusCounts] = useState<Record<QuoteStatus, number>>({
+    pending: 0,
+    approved: 0,
+    completed: 0,
+    cancelled: 0,
+    in_progress: 0,
+    on_hold: 0,
+    on_delivery: 0,
+    delivered: 0
+  })
 
   useEffect(() => {
     fetchQuotes({
@@ -34,12 +45,29 @@ export default function QuotesPage() {
     })
   }, [currentPage, statusFilter, debouncedSearch, dateRange, fetchQuotes])
 
-  // Status sayılarını hesapla
-  const statusCounts = quotes.reduce((acc, quote) => {
-    const status = quote.status as QuoteStatus
-    acc[status] = (acc[status] || 0) + 1
-    return acc
-  }, {} as Record<QuoteStatus, number>)
+  // Tüm quote'ların durumlarını sayan yeni bir useEffect ekleyelim
+  useEffect(() => {
+    const fetchTotalCounts = async () => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('status')
+
+      if (error) {
+        console.error('Error fetching total status counts:', error)
+        return
+      }
+
+      const counts = data.reduce((acc, quote) => {
+        const status = quote.status as QuoteStatus
+        acc[status] = (acc[status] || 0) + 1
+        return acc
+      }, {} as Record<QuoteStatus, number>)
+
+      setTotalStatusCounts(counts)
+    }
+
+    fetchTotalCounts()
+  }, [supabase]) // Sadece component mount olduğunda çalışsın
 
   // İlk yükleme için loading skeleton
   if (loading.initial) {
@@ -164,22 +192,22 @@ export default function QuotesPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatCard
             title="Pending"
-            count={statusCounts['pending'] || 0}
+            count={totalStatusCounts['pending'] || 0}
             className="bg-yellow-50"
           />
           <StatCard
             title="Approved"
-            count={statusCounts['approved'] || 0}
+            count={totalStatusCounts['approved'] || 0}
             className="bg-green-50"
           />
           <StatCard
             title="Completed"
-            count={statusCounts['completed'] || 0}
+            count={totalStatusCounts['completed'] || 0}
             className="bg-blue-50"
           />
           <StatCard
             title="Cancelled"
-            count={statusCounts['cancelled'] || 0}
+            count={totalStatusCounts['cancelled'] || 0}
             className="bg-red-50"
           />
         </div>

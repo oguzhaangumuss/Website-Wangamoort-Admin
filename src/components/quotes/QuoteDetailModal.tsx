@@ -1,5 +1,8 @@
 import { Dialog } from '@headlessui/react'
 import { Quote } from '../../types/database.types'
+import * as XLSX from 'xlsx'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { exportQuoteToExcel } from '../../services/excelExport'
 
 type QuoteDetailModalProps = {
   quote: Quote
@@ -25,12 +28,22 @@ export function QuoteDetailModal({ quote, isOpen, onClose }: QuoteDetailModalPro
             <Dialog.Title className="text-2xl font-bold">
               Quote Details
             </Dialog.Title>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => exportQuoteToExcel(quote)}
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium 
+                  text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+                Export to Excel
+              </button>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           <div className="p-6 space-y-6">
