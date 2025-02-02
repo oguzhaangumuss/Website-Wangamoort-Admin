@@ -179,7 +179,10 @@ export default function ProductsPage() {
       {/* Table Section */}
       <div className="mt-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-          <ProductTable initialProducts={products} />
+          <ProductTable 
+            initialProducts={products} 
+            onDelete={() => loadData()}
+          />
         </div>
       </div>
     </div>

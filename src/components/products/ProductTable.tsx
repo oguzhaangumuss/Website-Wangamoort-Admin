@@ -27,9 +27,10 @@ interface ExtendedProduct extends Product {
 
 interface ProductTableProps {
   initialProducts: ExtendedProduct[]
+  onDelete: () => void
 }
 
-export default function ProductTable({ initialProducts }: ProductTableProps) {
+export default function ProductTable({ initialProducts, onDelete }: ProductTableProps) {
   const [products, setProducts] = useState<ExtendedProduct[]>(initialProducts)
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
   const supabase = createClientComponentClient<Database>()
@@ -82,7 +83,17 @@ export default function ProductTable({ initialProducts }: ProductTableProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      // Önce product_variants tablosundan ilgili kayıtları siliyoruz
+      // Modal'ı kapat
+      setDeleteModalData({ isOpen: false, productId: '', productName: '' })
+
+      // DB işlemleri
+      const { error: imagesError } = await supabase
+        .from('product_images')
+        .delete()
+        .in('variant_id', products.find(p => p.id === id)?.variants?.map(v => v.id) || [])
+
+      if (imagesError) throw imagesError
+
       const { error: variantsError } = await supabase
         .from('product_variants')
         .delete()
@@ -90,7 +101,13 @@ export default function ProductTable({ initialProducts }: ProductTableProps) {
 
       if (variantsError) throw variantsError
 
-      // Sonra products tablosundan ürünü siliyoruz
+      const { error: supplierProductsError } = await supabase
+        .from('supplier_products')
+        .delete()
+        .eq('product_id', id)
+
+      if (supplierProductsError) throw supplierProductsError
+
       const { error: productError } = await supabase
         .from('products')
         .delete()
@@ -98,35 +115,19 @@ export default function ProductTable({ initialProducts }: ProductTableProps) {
 
       if (productError) throw productError
 
-      // UI'dan silinen ürünü kaldır
-      setProducts(products.filter(p => p.id !== id))
+      // Parent component'in loadData fonksiyonunu çağır
+      onDelete()
 
-      toast.success('Product deleted successfully', {
-        description: 'The product and its variants have been permanently removed.',
-        duration: 2000,
-        className: 'bg-white dark:bg-gray-800',
-        descriptionClassName: 'text-gray-500 dark:text-gray-400',
-        style: {
-          border: '1px solid #E5E7EB',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-        }
+      // Toast mesajını göster
+      requestAnimationFrame(() => {
+        toast.success('Product deleted successfully')
       })
+
     } catch (error) {
       console.error('Delete error:', error)
-      toast.error('Failed to delete product', {
-        description: 'Please try again later.',
-        duration: 2000,
-        className: 'bg-white dark:bg-gray-800',
-        descriptionClassName: 'text-gray-500 dark:text-gray-400',
-        style: {
-          border: '1px solid #E5E7EB',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-        }
+      requestAnimationFrame(() => {
+        toast.error('Failed to delete product')
       })
-    } finally {
-      setDeleteModalData({ isOpen: false, productId: '', productName: '' })
     }
   }
 

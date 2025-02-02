@@ -64,39 +64,42 @@ export default function ImageUpload({
       if (!files || files.length === 0) return
 
       setUploading(true)
-      const file = files[0]
+      
+      // Tüm dosyalar için Promise array'i oluştur
+      const uploadPromises = Array.from(files).map(async (file, index) => {
+        const timestamp = new Date().getTime()
+        const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-')
+        const filePath = `product-images/${timestamp}-${safeName}`
 
-      const timestamp = new Date().getTime()
-      const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-')
-      const filePath = `product-images/${timestamp}-${safeName}`
+        await s3Client.send(new PutObjectCommand({
+          Bucket: process.env.NEXT_PUBLIC_AWS_BUCKET_NAME!,
+          Key: filePath,
+          Body: Buffer.from(await file.arrayBuffer()),
+          ContentType: file.type,
+          ACL: 'public-read'
+        }))
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_AWS_BUCKET_NAME!,
-        Key: filePath,
-        Body: Buffer.from(await file.arrayBuffer()),
-        ContentType: file.type,
-        ACL: 'public-read'
-      }))
-
-      const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${filePath}`
-      // İlk resim ise veya hiç resim yoksa varsayılan olarak ayarla
-      if (imageUrl) {
-        const isDefault = images.length === 0
-        const newImage: ProductImage = {
-          url: imageUrl,
-          is_default: isDefault,
+        return {
+          url: `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${filePath}`,
+          is_default: images.length === 0 && index === 0, // FileList.indexOf yerine index kullanıyoruz
           alt: file.name
         }
-        const newImages = isDefault ? [newImage] : [...images, newImage]
-        setImages(newImages)
-        onImagesChange(newImages, variantIndex)
-      }
+      })
+
+      // Tüm yüklemeleri bekle
+      const newImages = await Promise.all(uploadPromises)
+      
+      // Mevcut resimlerle birleştir
+      const updatedImages = [...images, ...newImages]
+      setImages(updatedImages)
+      onImagesChange(updatedImages, variantIndex)
+
     } catch (error: unknown) {
       const uploadError: UploadError = {
         message: error instanceof Error ? error.message : 'An unknown error occurred',
         code: 'UPLOAD_ERROR'
       }
-      console.error('Error uploading image:', uploadError)
+      console.error('Error uploading images:', uploadError)
       toast.error(uploadError.message)
     } finally {
       setUploading(false)
@@ -148,7 +151,7 @@ export default function ImageUpload({
     if (files.length === 0) return
 
     const fileList = new DataTransfer()
-    fileList.items.add(files[0])
+    files.forEach(file => fileList.items.add(file))
     
     await handleFileUpload({ 
       target: { files: fileList.files }
