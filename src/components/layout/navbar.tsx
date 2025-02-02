@@ -1,12 +1,13 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { User } from '@supabase/auth-helpers-nextjs'
 
 const navigation = [
   { name: 'Dashboard', href: '/' },
@@ -25,6 +26,39 @@ export default function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // İlk yüklemede ve auth state değiştiğinde kullanıcı bilgisini kontrol et
+    const checkUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+      } catch (error) {
+        console.error('Auth state check failed:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // İlk kontrol
+    checkUser()
+
+    // Auth state değişikliklerini dinle
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase.auth])
+
+  // Loading durumunda veya kullanıcı giriş yapmamışsa navbar'ı gösterme
+  if (loading || !user) {
+    return null
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
