@@ -104,7 +104,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
 
     loadProduct()
-  }, [supabase, id])
+  }, [id])
 
   // Kategorileri ve alt kategorileri yükle
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
 
     loadCategories()
-  }, [supabase, product.subcategory_id]) // product.subcategory_id değiştiğinde tekrar yükle
+  }, [product.subcategory_id])
 
   // Seçili kategoriye göre alt kategorileri filtrele
   const filteredSubcategories = subcategories.filter(
