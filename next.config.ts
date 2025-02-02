@@ -4,7 +4,9 @@ import path from "path";
 const nextConfig: NextConfig = {
   images: {
     domains: [
-      'wangamoort-product-images.s3.eu-north-1.amazonaws.com'
+      'wangamoort-product-images.s3.eu-north-1.amazonaws.com',
+      'localhost',
+      'wangamoort.com'
     ],
     unoptimized: true
   },

@@ -3,17 +3,22 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/types/database.types'
 
-
-
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const res = NextResponse.next()
-  
-  // any yerine doğru tipleri kullan
   const supabase = createMiddlewareClient<Database>({ req, res })
 
   try {
     // Oturum durumunu kontrol et
     const { data: { session } } = await supabase.auth.getSession()
+
+    // Eğer public dosyalara erişim varsa veya login sayfasına gidiyorsa devam et
+    if (
+      req.nextUrl.pathname.startsWith('/_next') ||
+      req.nextUrl.pathname.startsWith('/logo4.png') ||
+      req.nextUrl.pathname === '/login'
+    ) {
+      return res
+    }
 
     // Eğer oturum yoksa login sayfasına yönlendir
     if (!session) {
@@ -35,8 +40,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - logo4.png (logo file)
      * - login (login page)
      */
-    '/((?!_next/static|_next/image|favicon.ico|login).*)',
+    '/((?!_next/static|_next/image|favicon.ico|logo4.png|login).*)',
   ],
 } 

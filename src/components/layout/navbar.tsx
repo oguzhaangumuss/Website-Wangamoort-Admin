@@ -81,7 +81,7 @@ export default function Navbar() {
                       src="/logo4.png"
                       alt="Wangamoort"
                       className="h-14 w-auto"
-                      priority  // Öncelikli yükleme için
+                      loading="eager"
                       unoptimized
                     /> 
                   </Link>

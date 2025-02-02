@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -36,7 +36,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#152e1b] to-[#1f4429] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-100 to-slate-500 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white rounded-2xl shadow-xl p-8">
         {/* Logo */}
         <div className="flex justify-center">
@@ -45,11 +45,11 @@ export default function LoginPage() {
             alt="Wangamoort"
             width={200}
             height={60}
-            priority  // Öncelikli yükleme için
+            loading="eager"
             unoptimized
+            loader={({ src }) => src}
             className="w-auto h-16"
           />
-          
         </div>
 
         {/* Header */}
