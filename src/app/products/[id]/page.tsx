@@ -91,7 +91,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
             url: img.url,
             alt: img.alt || '',
             is_default: img.is_default || false
-          })) || []
+          })) || [],
+          description: variant.description || ''
         }))
 
         setVariants(formattedVariants)
@@ -234,7 +235,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               size: variant.size,
               color: variant.color,
               price: variant.price,
-              stock_status: variant.stock_status
+              stock_status: variant.stock_status,
+              description: variant.description || null
             })
             .eq('id', variant.id)
 
@@ -278,7 +280,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               size: variant.size,
               color: variant.color,
               price: variant.price,
-              stock_status: variant.stock_status
+              stock_status: variant.stock_status,
+              description: variant.description || null
             })
             .select()
             .single()
@@ -516,15 +519,32 @@ export default function EditProductPage({ params }: EditProductPageProps) {
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Images</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Size
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Color
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Stock
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Images
+                      </th>
+                      <th scope="col" className="relative px-6 py-3">
+                        <span className="sr-only">Edit</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -541,6 +561,9 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                             'bg-yellow-100 text-yellow-800'}`}>
                             {variant.stock_status.replace('_', ' ')}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                          {variant.description || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {variant.images?.length || 0} images
@@ -593,7 +616,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                       color: '',
                       price: 0,
                       stock_status: 'in_stock',
-                      images: []
+                      images: [],
+                      description: ''
                     }
                     setVariants([...variants, newVariant])
                     setSelectedVariantIndex(variants.length)

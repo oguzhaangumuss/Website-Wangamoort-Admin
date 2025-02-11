@@ -22,6 +22,7 @@ export interface VariantFormData {
   color: string
   price: number
   stock_status: 'in_stock' | 'out_of_stock' | 'pre_order'
+  description: string | null
   images?: ProductImage[]
 }
 
@@ -47,6 +48,7 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
         color: '',
         price: 0,
         stock_status: 'in_stock',
+        description: null,
         images: []
       }
     ])
@@ -198,6 +200,18 @@ export default function VariantForm({ variants = [], onChange, onDelete }: Varia
                 <option value="pre_order">Pre Order</option>
               </select>
             </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              value={variant.description || ''}
+              onChange={(e) => updateVariant(index, { name: 'description', value: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            />
           </div>
 
           {/* ImageUpload komponenti */}

@@ -128,7 +128,8 @@ export default function NewProductPage() {
               size: variant.size || 'Standart',
               color: variant.color || 'Default',
               price: variant.price ?? 0,
-              stock_status: variant.stock_status || 'in_stock'
+              stock_status: variant.stock_status || 'in_stock',
+              description: variant.description || null
             }])
             .select()
 
@@ -160,7 +161,8 @@ export default function NewProductPage() {
             size: '',
             color: '',
             price: 0,
-            stock_status: 'in_stock'
+            stock_status: 'in_stock',
+            description: null
           }])
           .select()
 

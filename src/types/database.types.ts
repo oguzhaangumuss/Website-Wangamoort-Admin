@@ -116,6 +116,7 @@ export interface Database {
           price: number
           stock_status: string
           created_at: string
+          description: string | null
         }
         Insert: {
           id?: string
@@ -126,6 +127,7 @@ export interface Database {
           price: number
           stock_status?: string
           created_at?: string
+          description?: string | null
         }
         Update: {
           id?: string
@@ -136,6 +138,7 @@ export interface Database {
           price?: number
           stock_status?: string
           created_at?: string
+          description?: string | null
         }
       }
       product_images: {

@@ -15,21 +15,32 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-
+    
+    if (loading) return // Prevent multiple submissions
+    
     try {
+      setLoading(true)
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
-      router.push('/')
+      // Başarılı login
+      router.push('/products')
       router.refresh()
-      toast.success('Welcome back!')
-    } catch {
-      toast.error('Invalid login credentials')
+      
+    } catch (error: any) {
+      if (error.status === 429) {
+        toast.error('Too many login attempts. Please try again in a few minutes.')
+      } else {
+        toast.error('Login failed. Please check your credentials.')
+      }
+      console.error('Login error:', error)
     } finally {
       setLoading(false)
     }
