@@ -31,7 +31,7 @@ interface ProductTableProps {
 }
 
 export default function ProductTable({ initialProducts, onDelete }: ProductTableProps) {
-  const [products, setProducts] = useState<ExtendedProduct[]>(initialProducts)
+  const [products] = useState<ExtendedProduct[]>([])
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
   const supabase = createClientComponentClient<Database>()
   const [deleteModalData, setDeleteModalData] = useState<{
