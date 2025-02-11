@@ -34,8 +34,8 @@ export default function LoginPage() {
       router.push('/products')
       router.refresh()
       
-    } catch (error: any) {
-      if (error.status === 429) {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error && error.status === 429) {
         toast.error('Too many login attempts. Please try again in a few minutes.')
       } else {
         toast.error('Login failed. Please check your credentials.')
