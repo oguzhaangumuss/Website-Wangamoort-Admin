@@ -105,7 +105,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
 
     loadProduct()
-  }, [id, supabase])
+  }, [id])
 
   // Kategorileri ve alt kategorileri yükle
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     }
 
     loadCategories()
-  }, [supabase])
+  }, [product.subcategory_id])
 
   // Seçili kategoriye göre alt kategorileri filtrele
   const filteredSubcategories = subcategories.filter(
@@ -157,7 +157,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
   useEffect(() => {
     // Supplier listesini yükle
-    const loadSuppliers = async () => {
+    const fetchSuppliers = async () => {
       const { data } = await supabase
         .from('suppliers')
         .select('*')
@@ -166,8 +166,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       setSuppliers(data || [])
     }
 
-    loadSuppliers()
-  }, [supabase])
+    fetchSuppliers()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
