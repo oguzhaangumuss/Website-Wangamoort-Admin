@@ -10,8 +10,6 @@ import { QuoteRow } from '../../components/quotes/QuoteRow'
 import { QuoteDetailModal } from '../../components/quotes/QuoteDetailModal'
 import { Quote } from '@/types/database.types'
 import { useDebounce } from '../../hooks/useDebounce'
-import { supabase } from '@/lib/supabase'
-import { TrashIcon } from '@heroicons/react/24/outline'
 import { toast } from 'sonner'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 

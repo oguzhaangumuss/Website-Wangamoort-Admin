@@ -24,8 +24,8 @@ export default function ClientLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
+    } = supabase.auth.onAuthStateChange((_event) => {
+      if (_event === 'SIGNED_OUT') {
         window.location.href = '/login'
       }
     })
