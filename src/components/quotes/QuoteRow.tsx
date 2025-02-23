@@ -1,14 +1,23 @@
 import { useState } from 'react'
 import { Quote } from '../../types/database.types'
 import { QuoteStatus } from '../../types/quoteStatus'
-  
+import { TrashIcon } from '@heroicons/react/24/outline'
+
 type QuoteRowProps = {
   quote: Quote
   onStatusChange: (id: string, status: QuoteStatus) => void
   onViewDetails: () => void
+  onDelete: () => void
+  isDeleting: boolean
 }
 
-export function QuoteRow({ quote, onStatusChange, onViewDetails }: QuoteRowProps) {
+export function QuoteRow({ 
+  quote, 
+  onStatusChange, 
+  onViewDetails, 
+  onDelete,
+  isDeleting 
+}: QuoteRowProps) {
   const [isUpdating, setIsUpdating] = useState(false)
 
   const total = quote.basket.reduce((sum, item) => sum + (item.price * item.quantity), 0)
@@ -69,12 +78,23 @@ export function QuoteRow({ quote, onStatusChange, onViewDetails }: QuoteRowProps
           )}
         </div>
       </td>
-      <td className="p-4">
+      <td className="p-4 space-x-2">
         <button
           onClick={onViewDetails}
           className="text-blue-600 hover:text-blue-800"
         >
           Details
+        </button>
+        <button
+          onClick={onDelete}
+          disabled={isDeleting}
+          className={`text-red-600 hover:text-red-800 ${isDeleting ? 'opacity-50' : ''}`}
+        >
+          {isDeleting ? (
+            <div className="animate-spin h-4 w-4 border-b-2 border-red-600 rounded-full inline-block" />
+          ) : (
+            <TrashIcon className="h-5 w-5" />
+          )}
         </button>
       </td>
     </tr>

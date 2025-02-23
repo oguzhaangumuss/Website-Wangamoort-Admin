@@ -11,6 +11,9 @@ import { QuoteDetailModal } from '../../components/quotes/QuoteDetailModal'
 import { Quote } from '@/types/database.types'
 import { useDebounce } from '../../hooks/useDebounce'
 import { supabase } from '@/lib/supabase'
+import { TrashIcon } from '@heroicons/react/24/outline'
+import { toast } from 'sonner'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function QuotesPage() {
   const { quotes, loading, totalCount, fetchQuotes, updateQuoteStatus } = useQuotes()
@@ -34,6 +37,8 @@ export default function QuotesPage() {
     on_delivery: 0,
     delivered: 0
   })
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
     fetchQuotes({
@@ -67,7 +72,91 @@ export default function QuotesPage() {
     }
 
     fetchTotalCounts()
-  }, [supabase]) // Sadece component mount olduğunda çalışsın
+  }, [supabase])
+
+  const handleDelete = async (quoteId: string) => {
+    toast.custom((t) => (
+      <div className="bg-white p-4 rounded-lg shadow-lg">
+        <h3 className="text-lg font-semibold mb-2">Delete Quote</h3>
+        <p className="text-gray-600 mb-4">Are you sure you want to delete this quote? This action cannot be undone.</p>
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t)
+              setIsDeleting(quoteId)
+              
+              try {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session) {
+                  throw new Error('No active session. Please login again.')
+                }
+
+                const { data, error } = await supabase
+                  .from('quotes')
+                  .delete()
+                  .eq('id', quoteId)
+                  .select('*')
+
+                if (error) throw error
+
+                // Silinen quote'un status'ünü kullanarak totalStatusCounts'u güncelle
+                if (data && data[0]) {
+                  const deletedStatus = data[0].status as QuoteStatus
+                  setTotalStatusCounts(prev => ({
+                    ...prev,
+                    [deletedStatus]: Math.max(0, (prev[deletedStatus] || 0) - 1)
+                  }))
+                }
+
+                toast.success('Quote deleted successfully')
+                
+                // Listeyi yenile
+                await fetchQuotes({
+                  page: currentPage,
+                  status: statusFilter,
+                  search: debouncedSearch,
+                  dateStart: dateRange.start || undefined,
+                  dateEnd: dateRange.end || undefined
+                })
+
+                // Tüm status sayılarını yeniden çek
+                const { data: newStatusData } = await supabase
+                  .from('quotes')
+                  .select('status')
+
+                if (newStatusData) {
+                  const newCounts = newStatusData.reduce((acc, quote) => {
+                    const status = quote.status as QuoteStatus
+                    acc[status] = (acc[status] || 0) + 1
+                    return acc
+                  }, {} as Record<QuoteStatus, number>)
+
+                  setTotalStatusCounts(newCounts)
+                }
+
+              } catch (error: any) {
+                console.error('Delete error:', error)
+                toast.error(error.message)
+              } finally {
+                setIsDeleting(null)
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity
+    })
+  }
 
   // İlk yükleme için loading skeleton
   if (loading.initial) {
@@ -106,7 +195,7 @@ export default function QuotesPage() {
     if (loading.search) {
       return (
         <tr>
-          <td colSpan={5} className="p-4">
+          <td colSpan={6} className="p-4">
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
             </div>
@@ -118,7 +207,7 @@ export default function QuotesPage() {
     if (quotes.length === 0) {
       return (
         <tr>
-          <td colSpan={5} className="p-8 text-center text-gray-500">
+          <td colSpan={6} className="p-8 text-center text-gray-500">
             No quotes found
           </td>
         </tr>
@@ -134,6 +223,8 @@ export default function QuotesPage() {
           setSelectedQuote(quote)
           setIsDetailModalOpen(true)
         }}
+        onDelete={() => handleDelete(quote.id)}
+        isDeleting={isDeleting === quote.id}
       />
     ))
   }

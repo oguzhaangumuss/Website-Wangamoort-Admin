@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/layout/navbar";
-import { Toaster } from 'sonner'
+import ClientLayout from "./client-layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,24 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
-        <main>{children}</main>
-        <Toaster 
-          position="top-right" 
-          expand={false} 
-          richColors 
-          closeButton
-          style={{
-            zIndex: 9999,
-          }}
-          toastOptions={{
-            style: {
-              background: 'white',
-              color: 'black',
-            },
-            className: 'my-toast-class',
-          }}
-        />
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
