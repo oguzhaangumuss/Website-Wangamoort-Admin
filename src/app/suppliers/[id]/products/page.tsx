@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Supplier, SupplierProduct, Product } from '@/types/database.types'
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline'
@@ -19,31 +19,7 @@ export default function SupplierProducts({ params }: { params: Promise<{ id: str
   const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
 
-  useEffect(() => {
-    fetchSupplierAndProducts()
-  }, [id])
-
-  useEffect(() => {
-    const loadAvailableProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name')
-      
-      if (error) {
-        console.error('Error loading products:', error)
-        return
-      }
-      
-      setAvailableProducts(data || [])
-    }
-
-    if (showAddModal) {
-      loadAvailableProducts()
-    }
-  }, [showAddModal, supabase])
-
-  const fetchSupplierAndProducts = async () => {
+  const fetchSupplierAndProducts = useCallback(async () => {
     try {
       // Supplier bilgilerini al
       const { data: supplierData, error: supplierError } = await supabase
@@ -55,7 +31,7 @@ export default function SupplierProducts({ params }: { params: Promise<{ id: str
       if (supplierError) throw supplierError
       setSupplier(supplierData)
 
-      // Supplier'ın ürünlerini al (product detayları ile birlikte)
+      // Supplier'ın ürünlerini al
       const { data: productsData, error: productsError } = await supabase
         .from('supplier_products')
         .select(`
@@ -84,7 +60,31 @@ export default function SupplierProducts({ params }: { params: Promise<{ id: str
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchSupplierAndProducts()
+  }, [fetchSupplierAndProducts])
+
+  useEffect(() => {
+    const loadAvailableProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('name')
+      
+      if (error) {
+        console.error('Error loading products:', error)
+        return
+      }
+      
+      setAvailableProducts(data || [])
+    }
+
+    if (showAddModal) {
+      loadAvailableProducts()
+    }
+  }, [showAddModal])
 
   // Fiyat güncelleme fonksiyonu
   const handleUpdatePrice = async (productId: string, newPrice: number) => {

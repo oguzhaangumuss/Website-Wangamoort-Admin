@@ -138,9 +138,13 @@ export default function QuotesPage() {
                   setTotalStatusCounts(newCounts)
                 }
 
-              } catch (error: any) {
+              } catch (error: unknown) {
                 console.error('Delete error:', error)
-                toast.error(error.message)
+                // Hata mesajını güvenli bir şekilde işle
+                const errorMessage = error instanceof Error 
+                  ? error.message 
+                  : 'An unexpected error occurred'
+                toast.error(errorMessage)
               } finally {
                 setIsDeleting(null)
               }
