@@ -181,7 +181,8 @@ export async function fetchRecentOrders(supabase: SupabaseClient<Database>): Pro
     status: quote.status,
     total_amount: quote.basket.reduce((sum: number, item: BasketItem) => sum + (item.price * item.quantity), 0),
     created_at: quote.created_at,
-    items_count: quote.basket.reduce((sum: number, item: BasketItem) => sum + item.quantity, 0)
+    items_count: quote.basket.reduce((sum: number, item: BasketItem) => sum + item.quantity, 0),
+    case_id: quote.case_id || quote.id
   }))
 }
 

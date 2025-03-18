@@ -47,4 +47,5 @@ export type RecentOrder = {
   total_amount: number
   created_at: string
   items_count: number
+  case_id?: string
 } 

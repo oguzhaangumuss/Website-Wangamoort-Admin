@@ -1,31 +1,28 @@
-'use client'
+"use client";
 
-import { formatDistance } from 'date-fns'
-import { formatCurrency } from '../../utils/formatters'
+import { formatDistance } from "date-fns";
+import { formatCurrency } from "../../utils/formatters";
 
 type RecentOrder = {
-  id: string
-  customer_name: string
-  status: string
-  total_amount: number
-  created_at: string
-  items_count: number
-}
+  id: string;
+  customer_name: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  items_count: number;
+  case_id?: string;
+};
 
 type RecentOrdersProps = {
-  orders: RecentOrder[]
-}
+  orders: RecentOrder[];
+};
 
 const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-  in_progress: 'bg-purple-100 text-purple-800',
-  on_hold: 'bg-orange-100 text-orange-800',
-  on_delivery: 'bg-indigo-100 text-indigo-800',
-  delivered: 'bg-teal-100 text-teal-800'
-}
+  pending: "bg-yellow-100 text-yellow-800",
+  approved: "bg-blue-100 text-blue-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
 
 export function RecentOrders({ orders }: RecentOrdersProps) {
   return (
@@ -37,6 +34,9 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Order ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Case ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Customer
@@ -61,12 +61,23 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   #{order.id}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  {order.case_id ? (
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                      #{order.case_id}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.customer_name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${statusColors[order.status as keyof typeof statusColors]}`}>
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    ${statusColors[order.status as keyof typeof statusColors]}`}
+                  >
                     {order.status}
                   </span>
                 </td>
@@ -77,7 +88,9 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                   {formatCurrency(order.total_amount)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDistance(new Date(order.created_at), new Date(), { addSuffix: true })}
+                  {formatDistance(new Date(order.created_at), new Date(), {
+                    addSuffix: true,
+                  })}
                 </td>
               </tr>
             ))}
@@ -85,5 +98,5 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
         </table>
       </div>
     </div>
-  )
-} 
+  );
+}
