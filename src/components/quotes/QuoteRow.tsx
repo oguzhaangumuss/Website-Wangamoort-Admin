@@ -1,41 +1,44 @@
-import { useState } from 'react'
-import { Quote } from '../../types/database.types'
-import { QuoteStatus } from '../../types/quoteStatus'
-import { TrashIcon } from '@heroicons/react/24/outline'
+import { useState } from "react";
+import { Quote } from "../../types/database.types";
+import { QuoteStatus } from "../../types/quoteStatus";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 type QuoteRowProps = {
-  quote: Quote
-  onStatusChange: (id: string, status: QuoteStatus) => void
-  onViewDetails: () => void
-  onDelete: () => void
-  isDeleting: boolean
-}
+  quote: Quote;
+  onStatusChange: (id: string, status: QuoteStatus) => void;
+  onViewDetails: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+};
 
-export function QuoteRow({ 
-  quote, 
-  onStatusChange, 
-  onViewDetails, 
+export function QuoteRow({
+  quote,
+  onStatusChange,
+  onViewDetails,
   onDelete,
-  isDeleting 
+  isDeleting,
 }: QuoteRowProps) {
-  const [isUpdating, setIsUpdating] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const total = quote.basket.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const formattedDate = new Date(quote.created_at).toLocaleDateString('en-GB')
-  
+  const total = quote.basket.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const formattedDate = new Date(quote.created_at).toLocaleDateString("en-GB");
+
   // Dolar formatı için
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price)
-  }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(price);
+  };
 
   const handleStatusChange = async (newStatus: QuoteStatus) => {
-    setIsUpdating(true)
-    await onStatusChange(quote.id, newStatus)
-    setIsUpdating(false)
-  }
+    setIsUpdating(true);
+    await onStatusChange(quote.id, newStatus);
+    setIsUpdating(false);
+  };
 
   return (
     <tr className="border-b hover:bg-gray-50">
@@ -49,9 +52,7 @@ export function QuoteRow({
         <div>
           {quote.customer_first_name} {quote.customer_last_name}
         </div>
-        <div className="text-sm text-gray-500">
-          {quote.customer_email}
-        </div>
+        <div className="text-sm text-gray-500">{quote.customer_email}</div>
       </td>
       <td className="p-4">{formatPrice(total)}</td>
       <td className="p-4">
@@ -59,17 +60,15 @@ export function QuoteRow({
           <select
             value={quote.status}
             onChange={(e) => handleStatusChange(e.target.value as QuoteStatus)}
-            className={`px-3 py-1 border rounded-lg ${isUpdating ? 'opacity-50' : ''}`}
+            className={`px-3 py-1 border rounded-lg ${
+              isUpdating ? "opacity-50" : ""
+            }`}
             disabled={isUpdating}
           >
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
-            <option value="in_progress">In Progress</option>
-            <option value="on_hold">On Hold</option>
-            <option value="on_delivery">On Delivery</option>
-            <option value="delivered">Delivered</option>
           </select>
           {isUpdating && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -88,7 +87,9 @@ export function QuoteRow({
         <button
           onClick={onDelete}
           disabled={isDeleting}
-          className={`text-red-600 hover:text-red-800 ${isDeleting ? 'opacity-50' : ''}`}
+          className={`text-red-600 hover:text-red-800 ${
+            isDeleting ? "opacity-50" : ""
+          }`}
         >
           {isDeleting ? (
             <div className="animate-spin h-4 w-4 border-b-2 border-red-600 rounded-full inline-block" />
@@ -98,5 +99,5 @@ export function QuoteRow({
         </button>
       </td>
     </tr>
-  )
-} 
+  );
+}
