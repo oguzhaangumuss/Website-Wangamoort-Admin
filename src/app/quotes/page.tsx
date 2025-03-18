@@ -1,42 +1,44 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useQuotes } from '../../hooks/useQuotes'
-import { QuoteStatus } from '../../types/quoteStatus'
-import { DatePicker } from '../../components/quotes/DatePicker'
-import { StatCard } from '../../components/quotes/StatCard'
-import { Pagination } from '../../components/quotes/Pagination'
-import { QuoteRow } from '../../components/quotes/QuoteRow'
-import { QuoteDetailModal } from '../../components/quotes/QuoteDetailModal'
-import { Quote } from '@/types/database.types'
-import { useDebounce } from '../../hooks/useDebounce'
-import { toast } from 'sonner'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useEffect, useState } from "react";
+import { useQuotes } from "../../hooks/useQuotes";
+import { QuoteStatus } from "../../types/quoteStatus";
+import { DatePicker } from "../../components/quotes/DatePicker";
+import { StatCard } from "../../components/quotes/StatCard";
+import { Pagination } from "../../components/quotes/Pagination";
+import { QuoteRow } from "../../components/quotes/QuoteRow";
+import { QuoteDetailModal } from "../../components/quotes/QuoteDetailModal";
+import { Quote } from "@/types/database.types";
+import { useDebounce } from "../../hooks/useDebounce";
+import { toast } from "sonner";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function QuotesPage() {
-  const { quotes, loading, totalCount, fetchQuotes, updateQuoteStatus } = useQuotes()
-  const [searchTerm, setSearchTerm] = useState('')
-  const debouncedSearch = useDebounce(searchTerm, 500)
-  const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'all'>('all')
-  const [dateRange, setDateRange] = useState<{start: Date | null, end: Date | null}>({
+  const { quotes, loading, totalCount, fetchQuotes, updateQuoteStatus } =
+    useQuotes();
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [statusFilter, setStatusFilter] = useState<QuoteStatus | "all">("all");
+  const [dateRange, setDateRange] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
     start: null,
-    end: null
-  })
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [totalStatusCounts, setTotalStatusCounts] = useState<Record<QuoteStatus, number>>({
+    end: null,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [totalStatusCounts, setTotalStatusCounts] = useState<
+    Record<QuoteStatus, number>
+  >({
     pending: 0,
     approved: 0,
     completed: 0,
     cancelled: 0,
-    in_progress: 0,
-    on_hold: 0,
-    on_delivery: 0,
-    delivered: 0
-  })
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
+  });
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     fetchQuotes({
@@ -44,121 +46,130 @@ export default function QuotesPage() {
       status: statusFilter,
       search: debouncedSearch,
       dateStart: dateRange.start || undefined,
-      dateEnd: dateRange.end || undefined
-    })
-  }, [currentPage, statusFilter, debouncedSearch, dateRange, fetchQuotes])
+      dateEnd: dateRange.end || undefined,
+    });
+  }, [currentPage, statusFilter, debouncedSearch, dateRange, fetchQuotes]);
 
   // Tüm quote'ların durumlarını sayan yeni bir useEffect ekleyelim
   useEffect(() => {
     const fetchTotalCounts = async () => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select('status')
+      const { data, error } = await supabase.from("quotes").select("status");
 
       if (error) {
-        console.error('Error fetching total status counts:', error)
-        return
+        console.error("Error fetching total status counts:", error);
+        return;
       }
 
       const counts = data.reduce((acc, quote) => {
-        const status = quote.status as QuoteStatus
-        acc[status] = (acc[status] || 0) + 1
-        return acc
-      }, {} as Record<QuoteStatus, number>)
+        const status = quote.status as QuoteStatus;
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {} as Record<QuoteStatus, number>);
 
-      setTotalStatusCounts(counts)
-    }
+      setTotalStatusCounts(counts);
+    };
 
-    fetchTotalCounts()
-  }, [supabase])
+    fetchTotalCounts();
+  }, [supabase]);
 
   const handleDelete = async (quoteId: string) => {
-    toast.custom((t) => (
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-2">Delete Quote</h3>
-        <p className="text-gray-600 mb-4">Are you sure you want to delete this quote? This action cannot be undone.</p>
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={() => toast.dismiss(t)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t)
-              setIsDeleting(quoteId)
-              
-              try {
-                const { data: { session } } = await supabase.auth.getSession()
-                if (!session) {
-                  throw new Error('No active session. Please login again.')
+    toast.custom(
+      (t) => (
+        <div className="bg-white p-4 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold mb-2">Delete Quote</h3>
+          <p className="text-gray-600 mb-4">
+            Are you sure you want to delete this quote? This action cannot be
+            undone.
+          </p>
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t);
+                setIsDeleting(quoteId);
+
+                try {
+                  const {
+                    data: { session },
+                  } = await supabase.auth.getSession();
+                  if (!session) {
+                    throw new Error("No active session. Please login again.");
+                  }
+
+                  const { data, error } = await supabase
+                    .from("quotes")
+                    .delete()
+                    .eq("id", quoteId)
+                    .select("*");
+
+                  if (error) throw error;
+
+                  // Silinen quote'un status'ünü kullanarak totalStatusCounts'u güncelle
+                  if (data && data[0]) {
+                    const deletedStatus = data[0].status as QuoteStatus;
+                    setTotalStatusCounts((prev) => ({
+                      ...prev,
+                      [deletedStatus]: Math.max(
+                        0,
+                        (prev[deletedStatus] || 0) - 1
+                      ),
+                    }));
+                  }
+
+                  toast.success("Quote deleted successfully");
+
+                  // Listeyi yenile
+                  await fetchQuotes({
+                    page: currentPage,
+                    status: statusFilter,
+                    search: debouncedSearch,
+                    dateStart: dateRange.start || undefined,
+                    dateEnd: dateRange.end || undefined,
+                  });
+
+                  // Tüm status sayılarını yeniden çek
+                  const { data: newStatusData } = await supabase
+                    .from("quotes")
+                    .select("status");
+
+                  if (newStatusData) {
+                    const newCounts = newStatusData.reduce((acc, quote) => {
+                      const status = quote.status as QuoteStatus;
+                      acc[status] = (acc[status] || 0) + 1;
+                      return acc;
+                    }, {} as Record<QuoteStatus, number>);
+
+                    setTotalStatusCounts(newCounts);
+                  }
+                } catch (error: unknown) {
+                  console.error("Delete error:", error);
+                  // Hata mesajını güvenli bir şekilde işle
+                  const errorMessage =
+                    error instanceof Error
+                      ? error.message
+                      : "An unexpected error occurred";
+                  toast.error(errorMessage);
+                } finally {
+                  setIsDeleting(null);
                 }
-
-                const { data, error } = await supabase
-                  .from('quotes')
-                  .delete()
-                  .eq('id', quoteId)
-                  .select('*')
-
-                if (error) throw error
-
-                // Silinen quote'un status'ünü kullanarak totalStatusCounts'u güncelle
-                if (data && data[0]) {
-                  const deletedStatus = data[0].status as QuoteStatus
-                  setTotalStatusCounts(prev => ({
-                    ...prev,
-                    [deletedStatus]: Math.max(0, (prev[deletedStatus] || 0) - 1)
-                  }))
-                }
-
-                toast.success('Quote deleted successfully')
-                
-                // Listeyi yenile
-                await fetchQuotes({
-                  page: currentPage,
-                  status: statusFilter,
-                  search: debouncedSearch,
-                  dateStart: dateRange.start || undefined,
-                  dateEnd: dateRange.end || undefined
-                })
-
-                // Tüm status sayılarını yeniden çek
-                const { data: newStatusData } = await supabase
-                  .from('quotes')
-                  .select('status')
-
-                if (newStatusData) {
-                  const newCounts = newStatusData.reduce((acc, quote) => {
-                    const status = quote.status as QuoteStatus
-                    acc[status] = (acc[status] || 0) + 1
-                    return acc
-                  }, {} as Record<QuoteStatus, number>)
-
-                  setTotalStatusCounts(newCounts)
-                }
-
-              } catch (error: unknown) {
-                console.error('Delete error:', error)
-                // Hata mesajını güvenli bir şekilde işle
-                const errorMessage = error instanceof Error 
-                  ? error.message 
-                  : 'An unexpected error occurred'
-                toast.error(errorMessage)
-              } finally {
-                setIsDeleting(null)
-              }
-            }}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Delete
-          </button>
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
-    ), {
-      duration: Infinity
-    })
-  }
+      ),
+      {
+        duration: Infinity,
+      }
+    );
+  };
 
   // İlk yükleme için loading skeleton
   if (loading.initial) {
@@ -175,7 +186,10 @@ export default function QuotesPage() {
           {/* Stat Cards Skeletons */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-24 bg-gray-200 rounded-lg animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -184,12 +198,15 @@ export default function QuotesPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-100 rounded mb-2 animate-pulse" />
+              <div
+                key={i}
+                className="h-16 bg-gray-100 rounded mb-2 animate-pulse"
+              />
             ))}
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Tablo içeriğini render eden fonksiyon
@@ -203,7 +220,7 @@ export default function QuotesPage() {
             </div>
           </td>
         </tr>
-      )
+      );
     }
 
     if (quotes.length === 0) {
@@ -213,23 +230,23 @@ export default function QuotesPage() {
             No quotes found
           </td>
         </tr>
-      )
+      );
     }
 
     return quotes.map((quote) => (
-      <QuoteRow 
-        key={quote.id} 
+      <QuoteRow
+        key={quote.id}
         quote={quote}
         onStatusChange={updateQuoteStatus}
         onViewDetails={() => {
-          setSelectedQuote(quote)
-          setIsDetailModalOpen(true)
+          setSelectedQuote(quote);
+          setIsDetailModalOpen(true);
         }}
         onDelete={() => handleDelete(quote.id)}
         isDeleting={isDeleting === quote.id}
       />
-    ))
-  }
+    ));
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -254,7 +271,9 @@ export default function QuotesPage() {
           {/* Status Filtresi */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as QuoteStatus | 'all')}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as QuoteStatus | "all")
+            }
             className="px-4 py-2 border rounded-lg"
           >
             <option value="all">All Statuses</option>
@@ -268,13 +287,17 @@ export default function QuotesPage() {
           <div className="flex gap-2">
             <DatePicker
               selected={dateRange.start}
-              onChange={(date: Date | null) => setDateRange(prev => ({...prev, start: date}))}
+              onChange={(date: Date | null) =>
+                setDateRange((prev) => ({ ...prev, start: date }))
+              }
               placeholderText="Start Date"
               className="px-4 py-2 border rounded-lg"
             />
             <DatePicker
               selected={dateRange.end}
-              onChange={(date: Date | null) => setDateRange(prev => ({...prev, end: date}))}
+              onChange={(date: Date | null) =>
+                setDateRange((prev) => ({ ...prev, end: date }))
+              }
               placeholderText="End Date"
               className="px-4 py-2 border rounded-lg"
             />
@@ -285,22 +308,22 @@ export default function QuotesPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatCard
             title="Pending"
-            count={totalStatusCounts['pending'] || 0}
+            count={totalStatusCounts["pending"] || 0}
             className="bg-yellow-50"
           />
           <StatCard
             title="Approved"
-            count={totalStatusCounts['approved'] || 0}
+            count={totalStatusCounts["approved"] || 0}
             className="bg-green-50"
           />
           <StatCard
             title="Completed"
-            count={totalStatusCounts['completed'] || 0}
+            count={totalStatusCounts["completed"] || 0}
             className="bg-blue-50"
           />
           <StatCard
             title="Cancelled"
-            count={totalStatusCounts['cancelled'] || 0}
+            count={totalStatusCounts["cancelled"] || 0}
             className="bg-red-50"
           />
         </div>
@@ -319,9 +342,7 @@ export default function QuotesPage() {
               <th className="p-4 text-left">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {renderTableContent()}
-          </tbody>
+          <tbody>{renderTableContent()}</tbody>
         </table>
 
         <Pagination
@@ -337,11 +358,11 @@ export default function QuotesPage() {
           quote={selectedQuote}
           isOpen={isDetailModalOpen}
           onClose={() => {
-            setIsDetailModalOpen(false)
-            setSelectedQuote(null)
+            setIsDetailModalOpen(false);
+            setSelectedQuote(null);
           }}
         />
       )}
     </div>
-  )
-} 
+  );
+}
